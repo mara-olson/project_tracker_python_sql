@@ -32,8 +32,10 @@ def get_student_by_github(github):
     db_cursor = db.session.execute(QUERY, {'github': github})
 
     row = db_cursor.fetchone()
+    # print(row)
+    (firstname, lastname, githubby) = row
 
-    print(f"Student: {row[0]} {row[1]}\nGitHub account: {row[2]}")
+    print(f"Student: {firstname} {lastname}\nGitHub account: {githubby}")
 
 
 def make_new_student(first_name, last_name, github):
@@ -42,17 +44,50 @@ def make_new_student(first_name, last_name, github):
     Given a first name, last name, and GitHub account, add student to the
     database and print a confirmation message.
     """
-    pass
+    QUERY = """
+        INSERT INTO students (first_name, last_name, github)
+        VALUES (:first_name, :last_name, :github)
+    """
+
+    db.session.execute(QUERY, {'first_name': first_name,
+                                'last_name': last_name,
+                                'github': github})
+    db.session.commit()
+
+    print(f"Successfully added student: {first_name} {last_name}")
 
 
 def get_project_by_title(title):
     """Given a project title, print information about the project."""
-    pass
+    QUERY = """
+        SELECT title, description, max_grade
+        FROM projects
+        WHERE title = :title
+    """
+    db_cursor = db.session.execute(QUERY, {'title': title})
+
+    title, description, max_grade = db_cursor.fetchone()
+
+    print(f"The project {title} is about {description} with the maximum grade {max_grade}.")
+
+    
 
 
 def get_grade_by_github_title(github, title):
     """Print grade student received for a project."""
-    pass
+    QUERY = """
+        SELECT s.first_name AS firstname, s.last_name as lastname, g.student_github AS github, g.project_title AS title, g.grade AS grade
+        FROM grades AS g
+        JOIN students AS s on s.github = g.student_github
+        WHERE g.student_github = :github
+        AND g.project_title = :title
+    """
+
+    db_cursor = db.session.execute(QUERY, {'github': github,
+                                            'title': title})
+    firstname, lastname, github, title, grade = db_cursor.fetchone()
+
+    print(f"{firstname} {lastname} received a grade of {grade} for his/her/their {title} project.")
 
 
 def assign_grade(github, title, grade):
